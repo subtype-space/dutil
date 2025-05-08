@@ -38,7 +38,7 @@ function dutil() {
 
   case $1 in
     log|logs)
-      if [ ! -z "$2" ]; then
+      if [ -z "$2" ]; then
         error "No container specified"
       else
         docker logs -f "$2"
