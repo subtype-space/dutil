@@ -8,12 +8,7 @@ SYMLINK_PATH="/usr/local/bin/$BIN_NAME"
 
 echo "Installing dutil..."
 
-if [ -d "$INSTALL_DIR/.git" ]; then
-    git -C "$INSTALL_DIR" pull
-else
-    echo "dutil not found - grabbing it from GitHub..."
-    git clone "$REPO_URL" "$INSTALL_DIR"
-fi
+echo "Updating dutil..." && git pull
 
 chmod +x "$INSTALL_DIR/dutil.sh"
 
