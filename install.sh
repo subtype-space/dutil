@@ -14,6 +14,6 @@ if [ -f $BIN_PATH ]; then
     rm "$BIN_PATH"
 fi
 
-cp dutil.sh "$BIN_PATH"
+sudo cp dutil.sh "$BIN_PATH"
 
 echo "🎉 dutil installed! Run it with: dutil"
