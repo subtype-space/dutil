@@ -2,11 +2,13 @@
 # Author: Andrew Subowo
 # docker compose based utils -- these can be translated into aliases. It's not that fancy.
 # These are things that I somewhat do on a more frequent basis.
+# There's a LOT of things that could be added, but this utility is really done for my workflow
 # @_subtype / subtype / 2024
 
 
 function usage() {
   echo "usage: dutil [reload|rebuild|networks|ps|psg] [container name]"
+  echo -e "  log\n\t\t Connects to container and follows container logs"
   echo -e "  net|network|networks\n\t\t Returns the list of docker networks"
   echo -e "  ps|psg\n\t\t If given a container name, perform a search for it. psg performs a grep instead against docker ps -a"
   echo -e "  rebuild\n\t\t Performs a docker compose down, build, and up, detatched"
@@ -35,26 +37,33 @@ function dutil() {
   fi
 
   case $1 in
+    log|logs)
+      if [ ! -z "$2" ]; then
+        error "No container specified"
+      else
+        docker logs -f "$2"
+      fi
+      ;;
     net|network|networks)
       docker network ls
       ;;
     ps)
-      if [ -z $2 ]; then
+      if [ -z "$2" ]; then
         docker ps -a
       else
-        docker ps -a -f name=$2
+        docker ps -a -f name="$2"
       fi
       ;;
     psg)
-      if [ -z $2 ]; then
+      if [ -z "$2" ]; then
         docker ps -a
       else
-        docker ps -a | grep $2
+        docker ps -a | grep "$2"
       fi
       ;;    
     rebuild)
       #TODO: See if compose file has a build context?
-      if [ ! -z $2 ]; then
+      if [ ! -z "$2" ]; then
         ok "Using $2 as compose context"
         docker compose -f $2 down && docker compose -f $2 build && docker compose -f $2 up -d
       else
