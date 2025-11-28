@@ -123,6 +123,7 @@ function dutil() {
         dutil down && dutil pull && dutil up -d && ok "Complete"
       else
         dutil down $2 && dutil pull $2 && dutil up $2 && ok "Complete"
+      fi
       ;;
     *)
       usage
