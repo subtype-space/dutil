@@ -112,14 +112,14 @@ function dutil() {
       fi
       ;;
     up)
-      if [ ! -z "$2" ]; then
+      if [ -z "$2" ]; then
         docker compose up
       else
         docker compose -f $2 up -d
       fi
       ;;
     upgrade)
-      if [ ! -z "$2" ]; then
+      if [ -z "$2" ]; then
         dutil down && dutil pull && dutil up -d && ok "Complete"
       else
         dutil down $2 && dutil pull $2 && dutil up $2 && ok "Complete"
