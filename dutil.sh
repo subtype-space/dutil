@@ -7,14 +7,17 @@
 
 
 function usage() {
-  echo "usage: dutil [reload|rebuild|networks|ps|psg] [container name]"
+  echo "usage: dutil [COMMAND] [container name|compose file]"
+  echo -e "  down\n\t\t Stops a stack"
   echo -e "  log\n\t\t Connects to container and follows container logs"
   echo -e "  net|network|networks\n\t\t Returns the list of docker networks"
   echo -e "  ps|psg\n\t\t If given a container name, perform a search for it. psg performs a grep instead against docker ps -a"
+  echo -e "  pull\n\t\t Performs a docker compose pull"
   echo -e "  rebuild\n\t\t Performs a docker compose down, build, and up, detatched"
   echo -e "  reload\n\t\t Performs a docker compose down and up, detatched. Specify the file name to use a specific compose file."
   echo -e "  shell\n\t\t Runs docker exec -it against a given container name and opens a bash shell (as fallback, use /bin/sh)."
-  echo "Part of the _subtype common library"
+  echo -e "  up\n\t\t Starts a stack, detatched"
+  echo -e "  upgrade\n\t\t Stops a given stack, performs a pull, then starts it."
   exit 2
 }
 
@@ -32,11 +35,18 @@ function dutil() {
 
   # TODO: Add v1 support, maybe.
   if ! docker compose version &> /dev/null; then
-    echo "Docker compose v2 is not installed"
+    error "Docker compose v2 is not installed"
     return 1
   fi
 
   case $1 in
+    down)
+      if [ -z "$2" ]; then
+        docker compose down
+      else
+        docker compose -f $2 down
+      fi
+      ;;
     log|logs)
       if [ -z "$2" ]; then
         error "No container specified"
@@ -60,7 +70,14 @@ function dutil() {
       else
         docker ps -a | grep "$2"
       fi
-      ;;    
+      ;; 
+    pull)
+      if [ -z "$2" ]; then
+        docker compose pull
+      else
+        docker compose -f $2 pull
+      fi
+      ;;  
     rebuild)
       #TODO: See if compose file has a build context?
       if [ ! -z "$2" ]; then
@@ -94,8 +111,18 @@ function dutil() {
         fi
       fi
       ;;
+    up)
+      if [ ! -z "$2" ]; then
+        docker compose up
+      else
+        docker compose -f $2 up -d
+      fi
+      ;;
     upgrade)
-      docker compose down && docker compose pull && docker compose up -d && ok "Complete"
+      if [ ! -z "$2" ]; then
+        dutil down && dutil pull && dutil up -d && ok "Complete"
+      else
+        dutil down $2 && dutil pull $2 && dutil up $2 && ok "Complete"
       ;;
     *)
       usage
