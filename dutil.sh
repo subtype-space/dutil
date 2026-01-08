@@ -84,7 +84,7 @@ function dutil() {
 
     log|logs)
       [[ -n "$arg" ]] || { error "No container specified"; return 1; }
-      docker logs -F "$arg"
+      docker logs -f "$arg"
       ;;
 
     net|network|networks)
