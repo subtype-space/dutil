@@ -39,92 +39,88 @@ function dutil() {
     return 1
   fi
 
-  case $1 in
+  cmd="${1:-}"
+  arg="${2:-}"          # container name OR compose file depending on command
+
+  # Build compose args once
+  local -a compose_args=()
+  [[ -n "$arg" ]] && compose_args=(-f "$arg")
+
+  case "$cmd" in
     down)
-      if [ -z "$2" ]; then
-        docker compose down
-      else
-        docker compose -f $2 down
-      fi
+      docker compose "${compose_args[@]}" down
       ;;
+
+    up)
+      docker compose "${compose_args[@]}" up
+      ;;
+
+    upd)
+      docker compose "${compose_args[@]}" up -d
+      ;;
+
+    pull)
+      docker compose "${compose_args[@]}" pull
+      ;;
+
+    reload)
+      docker compose "${compose_args[@]}" down
+      docker compose "${compose_args[@]}" up -d
+      ;;
+
+    rebuild)
+      [[ -n "$arg" ]] && ok "Using $arg as compose context"
+      docker compose "${compose_args[@]}" down
+      docker compose "${compose_args[@]}" build
+      docker compose "${compose_args[@]}" up -d
+      ;;
+
+    upgrade)
+      docker compose "${compose_args[@]}" down
+      docker compose "${compose_args[@]}" pull
+      docker compose "${compose_args[@]}" up -d
+      ok "Complete"
+      ;;
+
     log|logs)
-      if [ -z "$2" ]; then
-        error "No container specified"
-      else
-        docker logs -f "$2"
-      fi
+      [[ -n "$arg" ]] || { error "No container specified"; return 1; }
+      docker logs "$arg"
       ;;
+
     net|network|networks)
       docker network ls
       ;;
+
     ps)
-      if [ -z "$2" ]; then
+      if [[ -z "$arg" ]]; then
         docker ps -a
       else
-        docker ps -a -f name="$2"
+        docker ps -a -f "name=$arg"
       fi
       ;;
+
     psg)
-      if [ -z "$2" ]; then
+      if [[ -z "$arg" ]]; then
         docker ps -a
       else
-        docker ps -a | grep "$2"
-      fi
-      ;; 
-    pull)
-      if [ -z "$2" ]; then
-        docker compose pull
-      else
-        docker compose -f $2 pull
-      fi
-      ;;  
-    rebuild)
-      #TODO: See if compose file has a build context?
-      if [ ! -z "$2" ]; then
-        ok "Using $2 as compose context"
-        docker compose -f $2 down && docker compose -f $2 build && docker compose -f $2 up -d
-      else
-        docker compose down && docker compose build && docker compose up -d
+        docker ps -a | grep -F -- "$arg"
       fi
       ;;
-    reload)
-      if [ ! -z $2 ]; then #docker compose up and down a given service
-        docker compose -f $2 down && docker compose -f $2 up -d
-      else
-        docker compose down && docker compose up -d
-      fi
-      ;;
+
     shell)
-      if [ -z $2 ]; then
-        usage
-        error "Missing container name"
+      [[ -n "$arg" ]] || { error "Missing container name"; usage; }
+      if docker exec "$arg" /bin/bash >/dev/null 2>&1; then
+        ok "Starting /bin/bash in $arg"
+        docker exec -it "$arg" /bin/bash
+      elif docker exec "$arg" /bin/sh >/dev/null 2>&1; then
+        warn "$arg does not support /bin/bash, using /bin/sh"
+        docker exec -it "$arg" /bin/sh
       else
-        if docker exec $2 /bin/bash > /dev/null 2>&1; then
-          ok "Starting /bin/bash in $2"
-          docker exec -it $2 /bin/bash
-        elif docker exec $2 /bin/sh > /dev/null 2>&1; then
-          warn "$2 does not support /bin/bash, using /bin/sh"
-          docker exec -it $2 /bin/sh
-        else
-          error "Unable to spawn shell session for $2"
-          return 1
-        fi
+        error "Unable to spawn shell session for $arg"
+        return 1
       fi
       ;;
-    up)
-      if [ -z "$2" ]; then
-        docker compose up
-      else
-        docker compose -f $2 up -d
-      fi
-      ;;
-    upgrade)
-      if [ -z "$2" ]; then
-        dutil down && dutil pull && dutil up -d && ok "Complete"
-      else
-        dutil down $2 && dutil pull $2 && dutil up $2 && ok "Complete"
-      fi
-      ;;
+
     *)
       usage
       ;;
