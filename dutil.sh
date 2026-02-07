@@ -13,10 +13,11 @@ function usage() {
   echo -e "  net|network|networks\n\t\t Returns the list of docker networks"
   echo -e "  ps|psg\n\t\t If given a container name, perform a search for it. psg performs a grep instead against docker ps -a"
   echo -e "  pull\n\t\t Performs a docker compose pull"
-  echo -e "  rebuild\n\t\t Performs a docker compose down, build, and up, detatched"
-  echo -e "  reload\n\t\t Performs a docker compose down and up, detatched. Specify the file name to use a specific compose file."
+  echo -e "  rebuild\n\t\t Performs a docker compose build, down, then up, detached"
+  echo -e "  reload\n\t\t Performs a docker compose down and up, detached. Specify the file name to use a specific compose file."
   echo -e "  shell\n\t\t Runs docker exec -it against a given container name and opens a bash shell (as fallback, use /bin/sh)."
-  echo -e "  up\n\t\t Starts a stack, detatched"
+  echo -e "  up\n\t\t Starts a stack, attached"
+  echo -e "  upd\n\t\tStarts a stack, detached"
   echo -e "  upgrade\n\t\t Stops a given stack, performs a pull, then starts it."
   exit 2
 }
@@ -29,7 +30,7 @@ function error() { echo "❌ $1"; }
 # Wrap it all into a function in case someone somehow partially downloads the file
 function dutil() {
   # Get current pwd  
-  if [ -z $1 ]; then
+  if [ -z "$1" ]; then
     usage
   fi
 
@@ -48,38 +49,43 @@ function dutil() {
 
   case "$cmd" in
     down)
+      [[ -n "$arg" ]] && ok "Using $arg as compose context"
       docker compose "${compose_args[@]}" down
       ;;
 
     up)
+      [[ -n "$arg" ]] && ok "Using $arg as compose context"
       docker compose "${compose_args[@]}" up
       ;;
 
     upd)
+      [[ -n "$arg" ]] && ok "Using $arg as compose context"
       docker compose "${compose_args[@]}" up -d
       ;;
 
     pull)
+      [[ -n "$arg" ]] && ok "Using $arg as compose context"
       docker compose "${compose_args[@]}" pull
       ;;
 
     reload)
+      [[ -n "$arg" ]] && ok "Using $arg as compose context"
       docker compose "${compose_args[@]}" down
       docker compose "${compose_args[@]}" up -d
       ;;
 
     rebuild)
       [[ -n "$arg" ]] && ok "Using $arg as compose context"
-      docker compose "${compose_args[@]}" down
       docker compose "${compose_args[@]}" build
+      docker compose "${compose_args[@]}" down
       docker compose "${compose_args[@]}" up -d
       ;;
 
     upgrade)
-      docker compose "${compose_args[@]}" down
+      [[ -n "$arg" ]] && ok "Using $arg as compose context"
       docker compose "${compose_args[@]}" pull
+      docker compose "${compose_args[@]}" down
       docker compose "${compose_args[@]}" up -d
-      ok "Complete"
       ;;
 
     log|logs)
