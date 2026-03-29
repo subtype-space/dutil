@@ -6,6 +6,10 @@ import (
 	"os/exec"
 )
 
+var (
+	Version = "dev"
+)
+
 func main() {
 	if len(os.Args) < 2 {
 		usage()
@@ -19,6 +23,9 @@ func main() {
 	}
 
 	switch cmd {
+	case "-v", "--version", "version":
+		fmt.Println(Version)
+		return
 	case "down":
 		runCompose(arg, "down")
 	case "log", "logs":

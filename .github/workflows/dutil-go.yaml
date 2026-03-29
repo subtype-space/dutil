@@ -23,10 +23,10 @@ jobs:
           go-version: '1.24'
 
       - name: Build dutil (linux/amd64)                                                                                                                                                                            
-        run: GOOS=linux GOARCH=amd64 go build -o dutil-linux-amd64                                                                                                                                                 
-   
+        run: GOOS=linux GOARCH=amd64 go build -o dutil-linux-amd64 -ldflags="-X main.Version=${{ github.ref_name }}" 
+        
       - name: Build dutil (darwin/arm64)                                                                                                                                                                           
-        run: GOOS=darwin GOARCH=arm64 go build -o dutil-darwin-arm64
+        run: GOOS=darwin GOARCH=arm64 go build -o dutil-darwin-arm64 -ldflags="-X main.Version=${{ github.ref_name }}"
         
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
