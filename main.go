@@ -125,7 +125,8 @@ func command(container string, cmd ...string) {
 		fmt.Fprintf(os.Stderr, "no container name\n")
 		return
 	}
-	run("docker", "exec", "-d", container, cmd...)
+	args := append([]string{"exec", "-d", container}, cmd...)
+	run("docker", args...)
 }
 
 func shell(container string) {
