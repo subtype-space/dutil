@@ -56,7 +56,7 @@ _dutil() {
   fi
 
   case "${COMP_WORDS[1]}" in
-    log|logs|shell|ps)
+    log|logs|cmd|command|shell|ps)
       COMPREPLY=( $(compgen -W "$(docker ps -a --format '{{.Names}}' 2>/dev/null)" -- "$cur") )
       ;;
     down|up|upd|pull|rebuild|reload|upgrade)
